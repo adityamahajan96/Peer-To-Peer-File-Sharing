@@ -168,10 +168,14 @@ int main(int argc, char **argv) {
 			}
 		}
 		
-		if(vec_command[0] == "create_user") {
-			
+		else if(vec_command[0] == "login") {
+			string user_id = vec_command[1];
+			string password = vec_command[2];
+			if(create_account(user_id, password) < 0) {
+				cerr << "ERROR: Some error occurred while logging in.\n";
+			}
 		}
-		if(vec_command[0] == "create_user") {
+		if(vec_command[0] == "create_group") {
 			
 		}
 		if(vec_command[0] == "create_user") {
