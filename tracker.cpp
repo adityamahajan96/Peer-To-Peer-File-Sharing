@@ -26,6 +26,8 @@ int main () {
 using namespace std;
 
 Client clients[MAX_CLIENTS];
+vector<Group> groups;
+
 int main(int argc, char const *argv[]) 
 { 
 	int server_fd, new_socket, valread; 
@@ -65,7 +67,12 @@ int main(int argc, char const *argv[])
 	} 
 	
 	int clientCounter = 0;
+	Client curr_loggedin;
+	curr_loggedin.user_id = "0000";
 	while(true) {
+		//string quit;
+		//getline(cin, quit);
+		//if( quit == "quit") return 0;
 		if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0) { 
 			cerr << "ERROR: Failed while trying to accept connections\n";
 			return -3;
@@ -87,10 +94,15 @@ int main(int argc, char const *argv[])
 		string msg_id = details[0];
 		
 		if (msg_id == "create_user") {
+			if(clientCounter > MAX_CLIENTS) {
+				cerr << "ERROR: User limit exceeded!\n";
+				continue;
+			}
 			clients[clientCounter].user_id = details[1];
 			clients[clientCounter].password = details[2];
 			clients[clientCounter].ip = details[3];
 			clients[clientCounter].port = details[4];
+			clientCounter++;
 		}
 		
 		else if (msg_id == "login") {
@@ -98,22 +110,55 @@ int main(int argc, char const *argv[])
 			for(int i=0;i<MAX_CLIENTS;i++) {
 				if(clients[i].user_id == details[1]) {
 					cout << "Login successful" << endl;
+					flag = true;
+					curr_loggedin = clients[i];
 					break;
 				}
 			}
 			
 			if(!flag) {
-				cout << "ERROR: Cannot login. User doesn't exist." <<endl;
+				cerr << "ERROR: Cannot login. User doesn't exist.\n";
 			}
 		}
 		
 		else if (msg_id == "create_group") {
-		
+			if(curr_loggedin.user_id == "0000") {
+				cerr << "ERROR: User not currently logged in\n";
+			}
+			else {
+				string groupid = details[1];
+				Group group;
+				group.groupid = groupid;
+				group.owner = curr_loggedin;
+				group.clients.push_back(curr_loggedin);
+				groups.push_back(group);
+				cout << "Group created with group id : " << groupid << endl;
+			}
+			
 		}
+		
+		else if(msg_id == "join_group")  {
+			Client owner;
+			for(auto &i : groups) {
+				if(i.groupid == details[1]) {
+					owner = i.owner;
+					break;
+				}
+			}
+			
+			cout << "Sent join request to owner: "<<owner.user_id<<endl;
+			
+			
+		}
+		
+		else if(msg_id == "leave_group") {
+			
+			
+		}
+		
 		//printf("%s\n",buffer);
 		send(new_socket , hello , strlen(hello) , 0 ); 
 		printf("Hello message sent\n"); 
-		clientCounter++;
 	}
 	return 0; 
 } 
