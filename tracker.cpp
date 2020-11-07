@@ -20,8 +20,7 @@ int main () {
 #include <stdlib.h> 
 #include <netinet/in.h> 
 #include <string.h> 
-#define PORT 8080 
-#define MAX_CLIENTS 10
+#define PORT 8080
 
 using namespace std;
 
@@ -34,22 +33,17 @@ int main(int argc, char const *argv[])
 	struct sockaddr_in address; 
 	int opt = 1; 
 	int addrlen = sizeof(address); 
-	char buffer[1024] = {0}; 
-	char *hello = "Hello from server"; 
 	
 	// Creating socket file descriptor 
-	if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) 
-	{ 
-		perror("socket failed"); 
-		exit(EXIT_FAILURE); 
+	if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) { 
+		cerr << "ERROR: Failed to create socket\n"); 
+		return -1; 
 	} 
 	
 	// Forcefully attaching socket to the port 8080 
-	if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, 
-												&opt, sizeof(opt))) 
-	{ 
-		perror("setsockopt"); 
-		exit(EXIT_FAILURE); 
+	if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) { 
+		cerr << "ERROR: Failed while trying to attach socket to port\n";
+		return -2;
 	} 
 	address.sin_family = AF_INET; 
 	address.sin_addr.s_addr = INADDR_ANY; 
@@ -60,15 +54,13 @@ int main(int argc, char const *argv[])
 		cerr << "ERROR: Failed while trying to bind\n"; 
 		return -1;
 	} 
-	if (listen(server_fd, MAX_CLIENTS) < 0) 
-	{ 
+	if (listen(server_fd, MAX_CLIENTS) < 0) { 
 		cerr << "ERROR: Failed while trying to listen\n"; 
 		return -2;
 	} 
 	
-	int clientCounter = 0;
-	Client curr_loggedin;
-	curr_loggedin.user_id = "0000";
+	pthread_t newClient;	
+	
 	while(true) {
 		//string quit;
 		//getline(cin, quit);
@@ -78,10 +70,27 @@ int main(int argc, char const *argv[])
 			return -3;
 		} 
 		
+		int *arg = (int *)malloc(sizeof(*arg));
+        	*arg = new_socket;
+        	pthread_create(&clientName, 0, serveClients, arg);
+	}
+
+	return 0; 
+}
+
+void *serveClients(void *socket) {
+	int new_socket = *((int *)socket);
+	int clientCounter = 0;
+	Client curr_loggedin;
+	curr_loggedin.user_id = "0000";
+
+	while(true) {
+		char buffer[1024] = {0}; 
+		char *hello = "Hello from server";
 		valread = recv(new_socket , buffer, 1024, 0);
 		char delim[2] = ":";
 		char* temp = strtok(buffer, delim);
-		
+			
 		//cout << temp << endl;
 		string details[5];
 		int i = 0 ;
@@ -90,9 +99,9 @@ int main(int argc, char const *argv[])
 			details[i++] = temp;
 			temp = strtok(NULL, delim);
 		}
-		
+			
 		string msg_id = details[0];
-		
+			
 		if (msg_id == "create_user") {
 			if(clientCounter > MAX_CLIENTS) {
 				cerr << "ERROR: User limit exceeded!\n";
@@ -160,6 +169,6 @@ int main(int argc, char const *argv[])
 		send(new_socket , hello , strlen(hello) , 0 ); 
 		printf("Hello message sent\n"); 
 	}
-	return 0; 
-} 
+
+}
 

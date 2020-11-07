@@ -1,5 +1,5 @@
 #include "myheader.h"
-
+#include "server.h"
 #define PORT 8080
 #define IP "127.0.0.1"
 
@@ -137,6 +137,17 @@ int main(int argc, char **argv) {
 	
 	//OPTIONAL: Precheck if arguments are valid
 	
+	string client_info, client_ip, client_port, tracker_info, tracker_ip, tracker_port;
+	client_info = argv[1];
+	client_ip = "";
+	for(int i=0;i<client_info.length();i++) {
+		if(client_info.at(i) == ' ') continue;
+		if(client_info.at(i) == ':') break;
+		client_ip+=client_info.at(i);
+	}
+	client_port = client_info.substr(client_info.find(":") + 1);
+	pthread_t runServer;
+	pthread_create(&runServer, 0, client_as_server, (void *)&client_info);
 	//Create Socket
 	/*int sock_fd, e;
 	int port = 8080;
