@@ -2,6 +2,8 @@
 #define SERVER_H
 #include "myheader.h"
 
+void *serveNewClients(void *socket);
+
 void *client_as_server(void * client_info)  {
 	int server_fd;
     	struct sockaddr_in address;
@@ -21,28 +23,34 @@ void *client_as_server(void * client_info)  {
 
     	// Creating socket file descriptor 
 	if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) { 
-		cerr << "ERROR: Failed to create socket\n"); 
-		return -1; 
+		cerr << "ERROR: Failed to create socket\n"; 
+		return client_info; 
 	} 
 	
 	// Forcefully attaching socket to the port 8080 
 	if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) { 
 		cerr << "ERROR: Failed while trying to attach socket to port\n";
-		return -2;
+		return client_info;
 	}
 	
     	address.sin_family = AF_INET; 
-	address.sin_addr.s_addr = INADDR_ANY; 
+	//address.sin_addr.s_addr = INADDR_ANY; 
 	address.sin_port = htons(stoi(server_port));
+	
+	// Convert IPv4 and IPv6 addresses from text to binary form 
+    	if(inet_pton(AF_INET, server_ip.c_str(), &address.sin_addr)<=0)  { 
+        	printf("\nInvalid address/ Address not supported \n"); 
+        	return client_info; 
+    	} 
 
     	// Forcefully attaching socket to the port 8080 
 	if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0) { 
 		cerr << "ERROR: Failed while trying to bind\n"; 
-		return -1;
+		return client_info;
 	} 
 	if (listen(server_fd, MAX_CLIENTS) < 0) { 
 		cerr << "ERROR: Failed while trying to listen\n"; 
-		return -2;
+		return client_info;
 	} 
     	
     	pthread_t clientName;
@@ -51,20 +59,20 @@ void *client_as_server(void * client_info)  {
     	
         	if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0) { 
 			cerr << "ERROR: Failed while trying to accept connections\n";
-			return -3;
+			return client_info;
 		} 
 
 		// Create new thread for each client and pass socket number as a argument.
 		int *arg = (int *)malloc(sizeof(*arg));
 		*arg = new_socket;
-		pthread_create(&clientName, 0, serverclientservice, arg);
+		pthread_create(&clientName, 0, serveNewClients, arg);
         //close(new_socket);
     	}
     
 }
 
 void *serveNewClients(void *socket) {
-	int new_socket = *((int *)socket);
+	/*int new_socket = *((int *)socket);
     	char buffer[1024] = {0};
     	read(new_socket, buffer, 1024);
     	string fname = string(buffer);
@@ -81,7 +89,7 @@ void *serveNewClients(void *socket) {
         NC = 1;
         chksz = fsize;
     }
-    logprinter("server sending file to client");
+    cout << "server sending file to client" << endl;
     char *Buff;
 
     //  Send file from server to client.
@@ -105,7 +113,20 @@ void *serveNewClients(void *socket) {
     }
     close(new_socket);
     readInputFile.close();
-    logprinter("file sent successfully -- server");
+    cout << "file sent successfully -- server" << endl;*/
+    	int new_socket = *((int *)socket);
+	int clientCounter = 0, valread;
+	Client curr_loggedin;
+	curr_loggedin.user_id = "0000";
+	char *send_buf;
+
+	while(true) {
+		char buffer[1024] = {0};
+		valread = read(new_socket , buffer, 1024);
+		cout << buffer<<endl;
+	}
+
+    return socket;
 }
 
 #endif

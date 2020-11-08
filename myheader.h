@@ -16,9 +16,10 @@
 #include<sys/socket.h>
 #include<sys/stat.h>
 #include<fcntl.h>
+#include <sstream>
 
 #define MAX_CLIENTS 10
-#define CHUNK_SIZE
+const long long CHUNK_SIZE = 512*1024;
 
 using namespace std;
 
