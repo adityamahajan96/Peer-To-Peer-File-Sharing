@@ -132,8 +132,6 @@ int main(int argc, char **argv) {
 			//printf("%s\n",send_buf);
 			cout<<"Creating group..."<<endl;
 			send(sock, send_buf, strlen(send_buf), 0);
-			cout << "Group created with group id : " << groupid << endl;
-
 			rcvd_msg = read(sock, rec_buf, strlen(rec_buf));
 		}
 		

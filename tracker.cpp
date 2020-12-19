@@ -143,7 +143,7 @@ void *serveClients(void *socket) {
 					}
 					else {
 						cout << "Wrong Password!" << endl;
-						flag = false;
+						flag = true;
 						break;
 					}
 				}
@@ -165,6 +165,7 @@ void *serveClients(void *socket) {
 				group.owner = curr_loggedin;
 				group.clients.push_back(curr_loggedin);
 				groups.push_back(group);
+				cout << "Group created with group id : " << groupid << endl;
 			}
 			
 		}
